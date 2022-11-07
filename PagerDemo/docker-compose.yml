@@ -1,0 +1,32 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres:10.13
+    container_name: db-server
+    ports:
+      - "5432:5432"
+    env_file:
+      - db.env
+    networks:
+      - sb-pg-net
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: pager-demo-api
+    ports:
+      - "8080:8080"
+    networks:
+      - sb-pg-net
+    depends_on:
+      - db
+
+networks:
+  sb-pg-net:
+    driver: bridge
+
+volumes:
+  db-data:
