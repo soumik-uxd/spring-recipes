@@ -2,16 +2,20 @@ version: "3.7"
 
 services:
   db:
-    image: postgres:10.13
-    container_name: db-server
+    image: postgres:12-alpine
+    container_name: dvdrental-db
     ports:
       - "5432:5432"
-    env_file:
-      - db.env
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=dvdrental
     networks:
       - sb-pg-net
     volumes:
       - db-data:/var/lib/postgresql/data
+      - ./initdb/:/docker-entrypoint-initdb.d/
+      - ./dvdrental.tar:/home/data/dvdrental.tar
   app:
     build:
       context: ./

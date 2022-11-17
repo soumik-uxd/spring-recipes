@@ -1,15 +1,15 @@
 package io.github.soumikuxd.PagerDemo.controllers;
 
-import io.github.soumikuxd.PagerDemo.exceptions.BadDataException;
-import io.github.soumikuxd.PagerDemo.exceptions.BadInputException;
-import io.github.soumikuxd.PagerDemo.exceptions.ResourceNotFoundException;
 import io.github.soumikuxd.PagerDemo.models.PagedResponse;
+import io.github.soumikuxd.PagerDemo.services.CacheService;
 import io.github.soumikuxd.PagerDemo.services.ResponseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.PostConstruct;
 
 @RestController
 @RequestMapping(value = "/api/v1/data/")
@@ -18,6 +18,14 @@ public class PagerController {
 
     @Autowired
     private ResponseService responseService;
+
+    @Autowired
+    private CacheService cacheService;
+
+    @PostConstruct
+    private void initCache() {
+        this.cacheService.clear();
+    }
 
     @ResponseStatus(value = HttpStatus.OK)
     @GetMapping(value = "all")
