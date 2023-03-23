@@ -39,4 +39,4 @@ COPY --from=builder ${JAVA_HOME} ${JAVA_HOME}
 # Copy the dependency application file from build stage artifact
 COPY --from=builder ${DEPENDENCY}/*.jar .
 
-ENTRYPOINT [ "java", "-jar", "Pager-Hazelcast-Demo.jar" ]
+ENTRYPOINT exec java $JAVA_OPTS -jar /Pager-Hazelcast-Demo.jar
