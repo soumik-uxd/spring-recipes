@@ -13,10 +13,16 @@ public class HazelcastConfig {
 
     @Value("${hazelCastNodes}")
     private String hazelcastNodes;
+
+    private final String hazelCastInstanceName = "hazelcast-demo-service";
+    private final String hazelCastClusterName = "dev";
+
     @Bean
     public ClientConfig localConfig() {
-        logger.info("Initializing LOCAL hazelcast config");
+        logger.info("Initializing hazelcast config");
         final ClientConfig config = new ClientConfig();
+        config.setInstanceName(hazelCastInstanceName);
+        config.setClusterName(hazelCastClusterName);
         config.getNetworkConfig().addAddress(hazelcastNodes.split(",")).setConnectionTimeout(1000);
         return config;
     }
