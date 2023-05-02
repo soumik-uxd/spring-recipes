@@ -20,11 +20,11 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    container_name: pager-hazelcast-demo-api
+    container_name: pager-hazelcast-demo-api-1
     ports:
       - "8081:8080"
     environment:
-      - JAVA_OPTS="-DhazelCastNodes=hazelcast:5701"
+      - "JAVA_OPTS=-DhazelCastNodes=hazelcast:5701"
     networks:
       - sb-pg-net
     depends_on:
@@ -34,11 +34,11 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    container_name: pager-hazelcast-demo-api
+    container_name: pager-hazelcast-demo-api-2
     ports:
       - "8082:8080"
     environment:
-      - JAVA_OPTS="-DhazelCastNodes=hazelcast:5701"
+      - "JAVA_OPTS=-DhazelCastNodes=hazelcast:5701"
     networks:
       - sb-pg-net
     depends_on:
@@ -48,6 +48,8 @@ services:
     image: hazelcast/hazelcast:5.2.0
     ports:
       - "5701:5701"
+    networks:
+      - sb-pg-net
   management-center:
     image: hazelcast/management-center:5.2.0
     environment:
@@ -55,9 +57,11 @@ services:
       - MC_DEFAULT_CLUSTER_MEMBERS=hazelcast:5701
       - MC_ALLOW_MULTIPLE_LOGIN=true
       - MC_ADMIN_USER=admin
-      - MC_ADMIN_PASSWORD=admin
+      - MC_ADMIN_PASSWORD=b4bJ56*F
     ports:
       - "8080:8080"
+    networks:
+      - sb-pg-net
 networks:
   sb-pg-net:
     driver: bridge
