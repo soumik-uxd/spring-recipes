@@ -1,6 +1,5 @@
 package io.github.soumikuxd.springbatchexamples.jobs;
 
-import io.github.soumikuxd.springbatchexamples.listeners.*;
 import io.github.soumikuxd.springbatchexamples.mappers.EmployeeFileRowMapper;
 import io.github.soumikuxd.springbatchexamples.models.Employee;
 import io.github.soumikuxd.springbatchexamples.processors.EmployeeProcessor;
@@ -29,39 +28,34 @@ import javax.sql.DataSource;
 @Configuration
 @EnableBatchProcessing
 @AllArgsConstructor
-public class Listener {
+public class CSV2DB {
     private DataSource dataSource;
     private JobRepository jobRepository;
     private PlatformTransactionManager transactionManager;
     private EmployeeProcessor employeeProcessor;
 
-    @Bean(name = "listenerjob")
-    public Job ListenerJob() throws Exception {
-        return new JobBuilder("listener", this.jobRepository)
-                .start(ListenerStep())
-                .listener(new LoggerJobListener())
+    @Bean(name="csv2dbjob")
+    public Job CSV2DBJob() throws Exception {
+        return new JobBuilder("csv2db", this.jobRepository)
+                .start(CSV2DBStep())
                 .build();
     }
 
     @Bean
-    public Step ListenerStep() throws Exception {
-        return new StepBuilder("listenerstep", this.jobRepository)
+    public Step CSV2DBStep() throws Exception {
+        return new StepBuilder("csv2dbstep", this.jobRepository)
                 .<Employee, Employee>chunk(10, this.transactionManager)
-                .reader(employeeFlatFileItemReader5())
+                .reader(employeeFlatFileItemReader())
                 .processor(this.employeeProcessor)
-                .writer(employeeDBWriter5())
-                .listener(new LoggerStepListener())
-                .listener(new LoggerReaderListener())
-                .listener(new LoggerProcessListener())
-                .listener(new LoggerWriterListener())
+                .writer(employeeDBWriter())
                 .build();
     }
 
     @Bean
     @StepScope
-    public FlatFileItemReader<Employee> employeeFlatFileItemReader5() throws Exception {
+    public FlatFileItemReader<Employee> employeeFlatFileItemReader() throws Exception {
         FlatFileItemReader<Employee> reader = new FlatFileItemReader<>();
-        reader.setResource(inputFileResource5(null));
+        reader.setResource(inputFileResource(null));
         reader.setLineMapper(new DefaultLineMapper<Employee>() {{
             setLineTokenizer(new DelimitedLineTokenizer() {{
                 setNames("employeeId", "firstName", "lastName", "email", "age");
@@ -74,13 +68,13 @@ public class Listener {
 
     @Bean
     @StepScope
-    public Resource inputFileResource5(@Value("#{jobParameters['fileName']}") final String fileName) throws Exception {
+    public Resource inputFileResource(@Value("#{jobParameters['fileName']}") final String fileName) throws Exception {
         return new ClassPathResource(fileName);
     }
 
     @Bean
     @StepScope
-    public JdbcBatchItemWriter<Employee> employeeDBWriter5() {
+    public JdbcBatchItemWriter<Employee> employeeDBWriter() {
         JdbcBatchItemWriter<Employee> writer = new JdbcBatchItemWriter<>();
         writer.setDataSource(dataSource);
         writer.setSql("insert into employees (employee_id, first_name, last_name, email, age) values (:employeeId, :firstName, :lastName, :email, :age)");
@@ -88,4 +82,7 @@ public class Listener {
         return writer;
     }
 
+
 }
+
+
