@@ -3,7 +3,6 @@ package io.github.soumikuxd.springbatchexamples.jobs;
 import io.github.soumikuxd.springbatchexamples.mappers.EmployeeDBRowMapper;
 import io.github.soumikuxd.springbatchexamples.models.Employee;
 import io.github.soumikuxd.springbatchexamples.processors.EmployeeProcessor;
-import io.github.soumikuxd.springbatchexamples.writers.EmailWriter;
 import lombok.AllArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -15,8 +14,12 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
+import org.springframework.batch.item.file.FlatFileItemWriter;
+import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
+import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
@@ -24,44 +27,49 @@ import javax.sql.DataSource;
 @Configuration
 @EnableBatchProcessing
 @AllArgsConstructor
-public class EmailSender {
+public class DBExtractor {
     private DataSource dataSource;
     private JobRepository jobRepository;
     private PlatformTransactionManager transactionManager;
     private EmployeeProcessor employeeProcessor;
 
-    @Bean(name="emailsenderjob")
-    public Job EmailSenderJob() throws Exception {
-        return new JobBuilder("EmailSender", this.jobRepository)
-                .start(EmailSenderStep())
+    @Bean(name="dbextractorjob")
+    public Job DBExtractorJob() throws Exception {
+        return new JobBuilder("dbextractor", this.jobRepository)
+                .start(DBExtractorStep())
                 .build();
     }
 
     @Bean
-    public Step EmailSenderStep() throws Exception {
-        return new StepBuilder("emailSenderstep", this.jobRepository)
-                .<Employee, Employee>chunk(5, this.transactionManager)
-                .reader(employeeDBReader3())
-                .processor(this.employeeProcessor)
-                .writer(emailSenderWriter())
+    public Step DBExtractorStep() throws Exception {
+        return new StepBuilder("dbextractorstep", this.jobRepository)
+                .<Employee, Employee>chunk(10, this.transactionManager)
+                .reader(employeeDBReader())
+                .processor(employeeProcessor)
+                .writer(employeeFileWriter())
                 .build();
     }
 
     @Bean
     @StepScope
-    public ItemWriter<? super Employee> emailSenderWriter() {
-        return new EmailWriter();
-    }
-
-    @Bean
-    @StepScope
-    public ItemStreamReader<Employee> employeeDBReader3() {
+    public ItemStreamReader<Employee> employeeDBReader() {
         JdbcCursorItemReader<Employee> reader = new JdbcCursorItemReader<>();
         reader.setDataSource(dataSource);
-        reader.setSql("select * from employees_copy where length(employee_id) = 4;");
+        reader.setSql("select * from employees_copy;");
         reader.setRowMapper(new EmployeeDBRowMapper());
         return reader;
     }
+
+    @Bean
+    public ItemWriter<Employee> employeeFileWriter() throws Exception {
+        FlatFileItemWriter<Employee> writer = new FlatFileItemWriter<>();
+        writer.setResource(new FileSystemResource("output/employees_extract.csv"));
+        writer.setLineAggregator(new DelimitedLineAggregator<Employee>() {{
+            setFieldExtractor(new BeanWrapperFieldExtractor<Employee>() {{
+                setNames(new String[]{"employeeId", "firstName", "lastName", "email", "age"});
+            }});
+        }});
+        writer.setShouldDeleteIfExists(true);
+        return writer;
+    }
 }
-
-
