@@ -51,7 +51,10 @@ public class JobHandlerService {
     @Qualifier("agesummaryjob")
     private final Job agesummaryjob;
 
-    public JobHandlerService(JobLauncher simpleJobLauncher, ExecutionContext executionContext, Job csv2dbjob, Job dbextractorjob, Job emailsenderjob, Job taskexecjob, Job execcontextjob, Job listenerjob, Job fixedtxt2dbjob, Job dbcleanerjob, Job agesummaryjob) {
+    @Qualifier("csv2topicjob")
+    private final Job csv2topicjob;
+
+    public JobHandlerService(JobLauncher simpleJobLauncher, ExecutionContext executionContext, Job csv2dbjob, Job dbextractorjob, Job emailsenderjob, Job taskexecjob, Job execcontextjob, Job listenerjob, Job fixedtxt2dbjob, Job dbcleanerjob, Job agesummaryjob, Job csv2topicjob) {
         this.simpleJobLauncher = simpleJobLauncher;
         this.executionContext = executionContext;
         this.csv2dbjob = csv2dbjob;
@@ -63,6 +66,7 @@ public class JobHandlerService {
         this.fixedtxt2dbjob = fixedtxt2dbjob;
         this.dbcleanerjob = dbcleanerjob;
         this.agesummaryjob = agesummaryjob;
+        this.csv2topicjob = csv2topicjob;
     }
 
     @Async
@@ -86,6 +90,10 @@ public class JobHandlerService {
             case "listenerjob" -> {
                 jobParametersBuilder.addString(Constants.FILE_NAME_CONTEXT_KEY, "employees.csv");
                 this.execute(listenerjob, jobParametersBuilder.toJobParameters());
+            }
+            case "csv2topicjob" -> {
+                jobParametersBuilder.addString(Constants.FILE_NAME_CONTEXT_KEY, "employees.csv");
+                this.execute(csv2topicjob, jobParametersBuilder.toJobParameters());
             }
             case "fixedtxt2dbjob" -> {
                 jobParametersBuilder.addString(Constants.FILE_NAME_CONTEXT_KEY, "employees.txt");
