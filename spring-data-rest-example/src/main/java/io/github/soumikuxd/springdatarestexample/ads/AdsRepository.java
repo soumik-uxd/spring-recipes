@@ -1,6 +1,6 @@
 package io.github.soumikuxd.springdatarestexample.ads;
 
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.CrudRepository;
 
-public interface AdsRepository extends PagingAndSortingRepository<Ad, Long> {
+public interface AdsRepository extends CrudRepository<Ad, Long> {
 }
