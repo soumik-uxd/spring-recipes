@@ -7,11 +7,9 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
 @Component
-@Slf4j
 public class EmployeeProcessor implements ItemProcessor<Employee, Employee> {
     @Override
     public Employee process(@Nonnull Employee employee) throws Exception {
-        log.info("Employee: {}", employee);
         return employee;
     }
 }
