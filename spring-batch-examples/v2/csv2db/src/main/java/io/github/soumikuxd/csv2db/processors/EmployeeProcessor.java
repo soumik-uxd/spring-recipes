@@ -2,7 +2,6 @@ package io.github.soumikuxd.csv2db.processors;
 
 import io.github.soumikuxd.csv2db.models.Employee;
 import jakarta.annotation.Nonnull;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
