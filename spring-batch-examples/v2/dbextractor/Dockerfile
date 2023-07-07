@@ -28,4 +28,4 @@ ENV LANG C.UTF-8
 # Copy the dependency application file from build stage artifact
 COPY --from=builder ${DEPENDENCY}/*.jar .
 
-ENTRYPOINT [ "java", "-jar", "csv2db.jar" ]
+ENTRYPOINT [ "java", "-jar", "dbextractor.jar" ]
