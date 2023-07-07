@@ -1,4 +1,4 @@
-# CSV2DB Job
+# TaskExec Job
 Demo Spring Batch Job to read data from a table in the database to a csv file using a TaskExecutor
 ## How to
 ### 1. Clone the application
