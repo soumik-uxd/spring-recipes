@@ -4,8 +4,7 @@ import io.github.soumikuxd.csv2db.mappers.EmployeeFileRowMapper;
 import io.github.soumikuxd.csv2db.models.Employee;
 import io.github.soumikuxd.csv2db.processors.EmployeeProcessor;
 import lombok.AllArgsConstructor;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
@@ -30,7 +29,7 @@ public class CSV2DB {
     private PlatformTransactionManager transactionManager;
     private EmployeeProcessor employeeProcessor;
 
-    @Bean
+    @Bean(name="csv2dbjob")
     public Job CSV2DBJob() throws Exception {
         return new JobBuilder("csv2dbjob", this.jobRepository)
                 .start(CSV2DBStep())
