@@ -9,3 +9,4 @@ This repository contains examples of Spring Batch jobs. The jobs are detailed be
 | **[TaskExec](./taskexec/)** | Inserts data from a CSV file to the database but uses a [TaskExecutor](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/core/task/TaskExecutor.html) for concurrency |
 | **[Listener](./listeners/)** | Inserts data from a CSV file to the database but uses [JobExecutionListener](https://docs.spring.io/spring-batch/docs/current/api/org/springframework/batch/core/JobExecutionListener.html) and [StepExecutionListener](https://docs.spring.io/spring-batch/docs/current/api/org/springframework/batch/core/StepExecutionListener.html) to trace the job flow |
 | **[FixedTxt2DB](./fixedtxt2db/)** | Inserts data from a fixed length file to the database |
+| **[EmailSender](./emailsender/)** | Reads email addresses from the database and sends email(dummy step) |
