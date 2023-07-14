@@ -16,7 +16,7 @@ public class ListenersApplication implements CommandLineRunner {
 	JobLauncher jobLauncher;
 
 	@Autowired
-	@Qualifier("csv2dbjob")
+	@Qualifier("listenerjob")
 	Job job;
 
 	public static void main(String[] args) {
