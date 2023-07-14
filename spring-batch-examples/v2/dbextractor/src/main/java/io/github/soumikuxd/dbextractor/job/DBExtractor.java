@@ -31,7 +31,7 @@ public class DBExtractor {
     private PlatformTransactionManager transactionManager;
     private EmployeeProcessor employeeProcessor;
 
-    @Bean(name="dbextractorjob")
+    @Bean(name = "dbextractorjob")
     public Job DBExtractorJob() throws Exception {
         return new JobBuilder("dbextractor", this.jobRepository)
                 .start(DBExtractorStep())
