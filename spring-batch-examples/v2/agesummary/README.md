@@ -1,4 +1,4 @@
-# Email Sender Job
+# Age Summary Job
 Demo Spring Batch Job to read email addresses from the database and send email(dummy step).
 
 ## How to
