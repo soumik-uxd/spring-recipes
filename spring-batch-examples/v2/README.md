@@ -11,3 +11,4 @@ This repository contains examples of Spring Batch jobs. The jobs are detailed be
 | **[FixedTxt2DB](./fixedtxt2db/)** | Inserts data from a fixed length file to the database |
 | **[EmailSender](./emailsender/)** | Reads email addresses from the database and sends email(dummy step) |
 | **[DBCleaner](./dbcleaner/)** | Clears data from a table in the database using [Tasklet](https://docs.spring.io/spring-batch/docs/current/api/org/springframework/batch/core/step/tasklet/Tasklet.html) |
+| **[AgeSummary](./agesummary/)** | Aggregates data from a table in the database using [Tasklet](https://docs.spring.io/spring-batch/docs/current/api/org/springframework/batch/core/step/tasklet/Tasklet.html) |
