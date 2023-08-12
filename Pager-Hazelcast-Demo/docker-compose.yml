@@ -10,6 +10,11 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=root
       - POSTGRES_DB=dvdrental
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 30s
+      retries: 5
     networks:
       - sb-pg-net
     volumes:
@@ -24,12 +29,15 @@ services:
     ports:
       - "8081:8080"
     environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
       - "JAVA_OPTS=-DhazelCastNodes=hazelcast:5701"
     networks:
       - sb-pg-net
     depends_on:
-      - db
-      - hazelcast
+      db:
+        condition: service_healthy
+      hazelcast:
+        condition: service_started
   app2:
     build:
       context: ./
@@ -38,20 +46,24 @@ services:
     ports:
       - "8082:8080"
     environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
       - "JAVA_OPTS=-DhazelCastNodes=hazelcast:5701"
     networks:
       - sb-pg-net
     depends_on:
-      - db
-      - hazelcast
+      db:
+        condition: service_healthy
+      hazelcast:
+        condition: service_started
   hazelcast:
-    image: hazelcast/hazelcast:5.2.0
+    hostname: hazelcast
+    image: hazelcast/hazelcast:${HAZELCAST_VERSION:-5.3.0-slim}
     ports:
       - "5701:5701"
     networks:
       - sb-pg-net
   management-center:
-    image: hazelcast/management-center:5.2.0
+    image: hazelcast/management-center:${HAZELCAST_VERSION:-5.3.0}
     environment:
       - MC_DEFAULT_CLUSTER=dev
       - MC_DEFAULT_CLUSTER_MEMBERS=hazelcast:5701
@@ -60,6 +72,9 @@ services:
       - MC_ADMIN_PASSWORD=b4bJ56*F
     ports:
       - "8080:8080"
+    depends_on:
+      hazelcast:
+        condition: service_started
     networks:
       - sb-pg-net
 networks:
