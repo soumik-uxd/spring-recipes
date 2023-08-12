@@ -1,0 +1,220 @@
+{
+	"info": {
+		"_postman_id": "f0155c75-99c1-4e83-9971-796a7002c681",
+		"name": "JPA Pagination Demo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17136605"
+	},
+	"item": [
+		{
+			"name": "Get All Products",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"200 records found\", () => {",
+							"    const result = pm.response.json();",
+							"    const { recordCount, response } = result;",
+							"    pm.expect(recordCount).to.eq(200);",
+							"    pm.expect(response.length).to.eq(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/data/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"data",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Sort by field",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"200 records found\", () => {",
+							"    const result = pm.response.json();",
+							"    const { recordCount, response } = result;",
+							"    pm.expect(recordCount).to.eq(200);",
+							"    pm.expect(response.length).to.eq(200);",
+							"});",
+							"",
+							"pm.test(\"Results are sorted\", () => {",
+							"    const result = pm.response.json();",
+							"    const { recordCount, response } = result;",
+							"    const sortingField = pm.variables.get(\"field\");",
+							"    const sortedResponse = response.slice().sort((a, b) => a[sortingField] > b[sortingField])",
+							"    pm.expect(sortedResponse).to.eql(response);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/data/products/{{field}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"data",
+						"products",
+						"{{field}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get by Page offset",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Records count matches page size\", () => {",
+							"    const result = pm.response.json();",
+							"    const { recordCount, response } = result;",
+							"    const pageSize = parseInt(pm.variables.get(\"pageSize\"));",
+							"    pm.expect(recordCount).to.eq(pageSize);",
+							"    pm.expect(response.content.length).to.eq(pageSize);",
+							"});",
+							"",
+							"pm.test(\"First record id matches (pageOffset*pageSize)+1\", () => {",
+							"    const result = pm.response.json();",
+							"    const { recordCount, response } = result;",
+							"    const pageSize = parseInt(pm.variables.get(\"pageSize\"));",
+							"    const pageOffset = parseInt(pm.variables.get(\"pageOffset\"));",
+							"    const firstId = response.content[0].id;",
+							"    const expectedId = (pageOffset * pageSize) + 1;",
+							"    pm.expect(firstId).to.eq(expectedId);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/data/products/pagination/{{pageOffset}}/{{pageSize}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"data",
+						"products",
+						"pagination",
+						"{{pageOffset}}",
+						"{{pageSize}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get by page sorted by field",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Records count matches page size\", () => {",
+							"    const result = pm.response.json();",
+							"    const { recordCount, response } = result;",
+							"    const pageSize = parseInt(pm.variables.get(\"pageSize\"));",
+							"    pm.expect(recordCount).to.eq(pageSize);",
+							"    pm.expect(response.content.length).to.eq(pageSize);",
+							"});",
+							"",
+							"pm.test(\"Results are sorted\", () => {",
+							"    const result = pm.response.json();",
+							"    const { recordCount, response } = result;",
+							"    const sortingField = pm.variables.get(\"field\");",
+							"    const sortedResponse = response.content.slice().sort((a, b) => a[sortingField] > b[sortingField])",
+							"    pm.expect(sortedResponse).to.eql(response.content);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/data/products/pagination/{{pageOffset}}/{{pageSize}}/{{field}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"data",
+						"products",
+						"pagination",
+						"{{pageOffset}}",
+						"{{pageSize}}",
+						"{{field}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "field",
+			"value": "quantity"
+		},
+		{
+			"key": "pageOffset",
+			"value": "2"
+		},
+		{
+			"key": "pageSize",
+			"value": "20"
+		}
+	]
+}
