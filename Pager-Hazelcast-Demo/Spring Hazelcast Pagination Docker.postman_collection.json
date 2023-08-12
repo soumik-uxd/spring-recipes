@@ -1,0 +1,202 @@
+{
+	"info": {
+		"_postman_id": "f39d5e95-f14a-4e9f-878d-cd44cc2c91ca",
+		"name": "Spring Hazelcast Pagination Docker",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17136605"
+	},
+	"item": [
+		{
+			"name": "Get First Page",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"nextPage in response\", () => {",
+							"    const result = pm.response.json();",
+							"    pm.expect(result).to.have.property('nextPage');",
+							"});",
+							"",
+							"pm.test(\"nextPage UUID is valid\", () => {",
+							"    const result = pm.response.json();",
+							"    const nextPageToken = result['nextPage']",
+							"    pm.collectionVariables.set(\"nextPageToken\", nextPageToken);",
+							"    pm.expect(nextPageToken).to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i);",
+							"});",
+							"",
+							"",
+							"pm.test(\"10 records found\", () => {",
+							"    const result = pm.response.json();",
+							"    const items = result['items'];",
+							"    pm.expect(items.length).to.eq(10);",
+							"});",
+							"",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL1}}",
+					"host": [
+						"{{BASE_URL1}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get by subsequent page from first node with tokens",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Atleast 1 record found\", () => {",
+							"    const result = pm.response.json();",
+							"    const items = result['items'];",
+							"    if ('nextPage' in result) {",
+							"        const nextPageToken = result['nextPage']",
+							"        pm.collectionVariables.set(\"nextPageToken\", nextPageToken);",
+							"        console.log(\"nextPageToken set as \" + nextPageToken)",
+							"    }",
+							"    pm.expect(items.length).to.be.greaterThan(0);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL1}}?nextPage={{nextPageToken}}",
+					"host": [
+						"{{BASE_URL1}}"
+					],
+					"query": [
+						{
+							"key": "nextPage",
+							"value": "{{nextPageToken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get by subsequent page from second node with tokens Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Atleast 1 record found\", () => {",
+							"    const result = pm.response.json();",
+							"    const items = result['items'];",
+							"    if ('nextPage' in result) {",
+							"        const nextPageToken = result['nextPage']",
+							"        pm.collectionVariables.set(\"nextPageToken\", nextPageToken);",
+							"        console.log(\"nextPageToken set as \" + nextPageToken)",
+							"    }",
+							"    pm.expect(items.length).to.be.greaterThan(0);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL2}}?nextPage={{nextPageToken}}",
+					"host": [
+						"{{BASE_URL2}}"
+					],
+					"query": [
+						{
+							"key": "nextPage",
+							"value": "{{nextPageToken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "nextPageToken",
+			"value": ""
+		},
+		{
+			"key": "BASE_URL1",
+			"value": "http://localhost:8081/api/v1/data/all"
+		},
+		{
+			"key": "BASE_URL2",
+			"value": "http://localhost:8082/api/v1/data/all"
+		}
+	]
+}
