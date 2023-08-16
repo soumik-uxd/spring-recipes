@@ -1,0 +1,150 @@
+{
+	"info": {
+		"_postman_id": "c1b7e81a-c81d-4e37-be11-94bdb0ab45a0",
+		"name": "Spring Pagination",
+		"description": "This API demonstrates how to return a subset of the data or a page, when there is a significant amount of data to be returned. The API returns the first page (or a subset) of the data and provides a token for the next page, which can then be added as a parameter to the next API call to retrieve the next page, and so on and so forth, until we reach to the end of the data. \n\n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17136605"
+	},
+	"item": [
+		{
+			"name": "Get First Page",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"nextPage in response\", () => {",
+							"    const result = pm.response.json();",
+							"    pm.expect(result).to.have.property('nextPage');",
+							"});",
+							"",
+							"pm.test(\"nextPage UUID is valid\", () => {",
+							"    const result = pm.response.json();",
+							"    const nextPageToken = result['nextPage']",
+							"    pm.collectionVariables.set(\"nextPageToken\", nextPageToken);",
+							"    pm.expect(nextPageToken).to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i);",
+							"});",
+							"",
+							"",
+							"pm.test(\"10 records found\", () => {",
+							"    const result = pm.response.json();",
+							"    const items = result['items'];",
+							"    pm.expect(items.length).to.eq(10);",
+							"});",
+							"",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}",
+					"host": [
+						"{{BASE_URL}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get by subsequent page from tokens",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Atleast 1 record found\", () => {",
+							"    const result = pm.response.json();",
+							"    const items = result['items'];",
+							"    if ('nextPage' in result) {",
+							"        const nextPageToken = result['nextPage']",
+							"        pm.collectionVariables.set(\"nextPageToken\", nextPageToken);",
+							"        console.log(\"nextPageToken set as \" + nextPageToken)",
+							"    }",
+							"    pm.expect(items.length).to.be.greaterThan(0);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}?nextPage={{nextPageToken}}",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"query": [
+						{
+							"key": "nextPage",
+							"value": "{{nextPageToken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "nextPageToken",
+			"value": ""
+		},
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:8080/api/v1/data/all"
+		},
+		{
+			"key": "pageSize",
+			"value": "20",
+			"disabled": true
+		}
+	]
+}
