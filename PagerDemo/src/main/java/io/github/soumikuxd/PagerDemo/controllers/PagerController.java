@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 @RestController
 @RequestMapping(value = "/api/v1/data/")

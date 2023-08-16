@@ -38,7 +38,7 @@ public class ResponseService {
             List<ResponseRow> page = new java.util.ArrayList<>(Collections.emptyList());
             int itemCount = 0;
             String token = "";
-            for(ResponseRow row: results) {
+            for (ResponseRow row : results) {
                 logger.debug("User: " + row.toString());
                 if (itemCount >= PAGE_SIZE) {
                     logger.debug("Page size b4 cache: " + page.size());
@@ -71,9 +71,6 @@ public class ResponseService {
         return firstPage;
     }
 
-    private void processPage() {
-
-    }
     public PagedResponse getFromCache(final String nextPage) { // Get items from DB
         return this.cacheService.getItem(nextPage);
     }

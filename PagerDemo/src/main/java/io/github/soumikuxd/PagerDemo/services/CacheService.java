@@ -1,7 +1,6 @@
 package io.github.soumikuxd.PagerDemo.services;
 
 import io.github.soumikuxd.PagerDemo.models.PagedResponse;
-import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
