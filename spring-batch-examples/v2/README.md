@@ -12,3 +12,4 @@ This repository contains examples of Spring Batch jobs. The jobs are detailed be
 | **[EmailSender](./emailsender/)** | Reads email addresses from the database and sends email(dummy step) |
 | **[DBCleaner](./dbcleaner/)** | Clears data from a table in the database using [Tasklet](https://docs.spring.io/spring-batch/docs/current/api/org/springframework/batch/core/step/tasklet/Tasklet.html) |
 | **[AgeSummary](./agesummary/)** | Aggregates data from a table in the database using [Tasklet](https://docs.spring.io/spring-batch/docs/current/api/org/springframework/batch/core/step/tasklet/Tasklet.html) |
+| **[CSV2Topic](./csv2topic/)** | Inserts data from a CSV file to a [Kafka topic](https://kafka.apache.org/intro) |
