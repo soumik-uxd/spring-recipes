@@ -23,13 +23,13 @@ For using the docker profile we can simply run:
 docker-compose up -d
 ```
 #### 3a. Run the application locally
-For the `local` spring profile we need to create our own postgres datasource, create the necessary tables, and also run our own kafka services (e.g. zookeeper & brokers etc.). The script to load these tables for the datasource are in directory `db` inside `initDB.sh` which in turn uses the `initDB.sql`, there is also a `Dockerfile` to build the necessary image. The datasource can be created by either:
+For the `local` spring profile we need to create our own postgres datasource and the necessary tables. The script to load these tables for the datasource are in directory `db` (outside the directory of this job) inside `initDB.sh` which in turn uses the `initDB.sql`, there is also a `Dockerfile` to build the necessary image. The datasource can be created by either:
 ```bash
-docker run -d --rm --name sbpgdb -v $PWD/initDB.sh/:/docker-entrypoint-initdb.d/initDB.sh -v $PWD/initDB.sql:/home/data/initDB.sql -e POSTGRES_PASSWORD=root -p 5432:5432 postgres:12-alpine
+docker run -d --rm --name sbpgdb -v <db-directory>/initDB.sh/:/docker-entrypoint-initdb.d/initDB.sh -v <db-directory>/initDB.sql:/home/data/initDB.sql -e POSTGRES_PASSWORD=root -p 5432:5432 postgres:12-alpine
 ```
 Or we can build the image locally and then run it
 ```bash
-docker build -t <DataSource Image Name> ./db
+docker build -t <DataSource Image Name> ../db
 docker run -d --rm --name  <DataSource Container Name> -e POSTGRES_PASSWORD=root -p 5432:5432 postgres:12-alpine
 ```
 ```bash
