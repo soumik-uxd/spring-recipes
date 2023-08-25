@@ -2,6 +2,7 @@
 	"info": {
 		"_postman_id": "f0155c75-99c1-4e83-9971-796a7002c681",
 		"name": "JPA Pagination Demo",
+		"description": "This API demonstrates how to return a subset of the data or a page, when there is a significant amount of data to be returned, using the pagination and sorting mechanism provided by [Spring Data JPA](https://spring.io/projects/spring-data-jpa).",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "17136605"
 	},
