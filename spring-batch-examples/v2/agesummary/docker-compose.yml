@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  db:
+    build:
+      context: ./db/
+      dockerfile: Dockerfile
+    container_name: db-server
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+    networks:
+      - sb-pg-net
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: agesummary
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_URL=jdbc:postgresql://db-server:5432/springbatchdb
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=root
+      - API_PORT=8080
+    networks:
+      - sb-pg-net
+    depends_on:
+      db:
+        condition: service_healthy
+networks:
+  sb-pg-net:
+    driver: bridge
