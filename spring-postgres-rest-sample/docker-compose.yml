@@ -1,0 +1,36 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres:12.10-alpine
+    container_name: db-server
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=employeedb
+    networks:
+      - sb-pg-net
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: employee-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - sb-pg-net
+    depends_on:
+      - db
+
+networks:
+  sb-pg-net:
+    driver: bridge
+
+volumes:
+  db-data:

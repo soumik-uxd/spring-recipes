@@ -1,0 +1,456 @@
+{
+	"info": {
+		"_postman_id": "06167e60-7f8e-489b-b900-9063e1f2a842",
+		"name": "EmployeeDB",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17136605"
+	},
+	"item": [
+		{
+			"name": "API status",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Status is UP\", () => {",
+							"    pm.expect(pm.response.text()).to.include(\"status\");",
+							"    const { status } = pm.response.json();",
+							"    pm.expect(status).to.eql(\"UP\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOSTNAME}}:{{PORT}}/actuator/health",
+					"protocol": "http",
+					"host": [
+						"{{HOSTNAME}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"actuator",
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add an employee",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const firstName = pm.variables.replaceIn(\"{{$randomFirstName}}\");",
+							"const lastName = pm.variables.replaceIn(\"{{$randomLastName}}\");",
+							"pm.variables.set(\"firstName\",firstName);",
+							"pm.variables.set(\"lastName\",lastName);",
+							"pm.variables.set(\"email\", `${firstName[0].toLowerCase()}${lastName.toLowerCase()}@gmail.com`);",
+							"",
+							"console.log(`Adding employee ${firstName} ${lastName}.`);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", () => {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Employee is created\", () => {",
+							"    const employee = pm.response.json();",
+							"    const { id, firstName, lastName } = employee;",
+							"    pm.expect(employee).to.be.an('object');",
+							"    pm.expect(id).to.be.greaterThan(0);",
+							"    pm.expect(firstName).to.be.not.null;",
+							"    pm.expect(lastName).to.be.not.null;",
+							"    pm.collectionVariables.set(\"employeeId\", id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"firstName\": \"{{firstName}}\",\n\t\"lastName\": \"{{lastName}}\",\n\t\"email\": \"{{email}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/add",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"add"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET all  employees",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Employees are returned\", () => {",
+							"    const employees = pm.response.json();",
+							"    pm.expect(employees.length).to.be.greaterThan(0);",
+							"});",
+							"",
+							"pm.test(\"Valid schema returned\", () => {",
+							"    const result = tv4.validateResult(pm.response.json(), pm.collectionVariables.get(\"employeesSchema\"));",
+							"    pm.expect(result.valid).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/all",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"all"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Employee by Id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Employee found\", () => {",
+							"    const employee = pm.response.json();",
+							"    const { id, firstName, lastName } = employee;",
+							"    pm.expect(employee).to.be.an('object');",
+							"    pm.expect(id).to.be.greaterThan(0);",
+							"    pm.expect(firstName).to.be.not.null;",
+							"    pm.expect(lastName).to.be.not.null;",
+							"});",
+							"",
+							"pm.test(\"Valid schema returned\", () => {",
+							"    const result = tv4.validateResult(pm.response.json(), pm.collectionVariables.get(\"employeeSchema\"));",
+							"    pm.expect(result.valid).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/:id",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "{{employeeId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Employee by Id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Employee found\", () => {",
+							"    const employee = pm.response.json();",
+							"    const { id, firstName, lastName } = employee;",
+							"    pm.expect(employee).to.be.an('object');",
+							"    pm.expect(id).to.be.greaterThan(0);",
+							"    pm.expect(firstName).to.be.not.null;",
+							"    pm.expect(lastName).to.be.not.null;",
+							"    pm.expect(id).to.be.eql(pm.collectionVariables.get(\"employeeId\"));",
+							"    pm.expect(firstName).to.be.eql(\"Peter\");",
+							"    pm.expect(lastName).to.be.eql(\"Parkers\");",
+							"});",
+							"",
+							"pm.test(\"Valid schema returned\", () => {",
+							"    const result = tv4.validateResult(pm.response.json(), pm.collectionVariables.get(\"employeeSchema\"));",
+							"    pm.expect(result.valid).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"firstName\": \"Peter\",\n\t\"lastName\": \"Parkers\",\n\t\"email\": \"pparkers@gmail.com\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/:id",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "{{employeeId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Employee by Id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Employee is deleted\", () => {",
+							"    pm.expect(pm.response.text()).to.include(\"deleted\");",
+							"    const { deleted } = pm.response.json();",
+							"    pm.expect(deleted).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/:id",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "{{employeeId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "API docs",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Valid schema returned\", () => {",
+							"    const result = tv4.validateResult(pm.response.json(), pm.collectionVariables.get(\"docSchema\"));",
+							"    pm.expect(result.valid).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{HOSTNAME}}:{{PORT}}/v2/api-docs",
+					"protocol": "http",
+					"host": [
+						"{{HOSTNAME}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"v2",
+						"api-docs"
+					]
+				},
+				"description": "API docs\n"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "HOSTNAME",
+			"value": "localhost",
+			"type": "string"
+		},
+		{
+			"key": "PORT",
+			"value": "8080",
+			"type": "string"
+		},
+		{
+			"key": "BASE_URL",
+			"value": "http://{{HOSTNAME}}:{{PORT}}/api/v1/employee",
+			"type": "string"
+		},
+		{
+			"key": "employeesSchema",
+			"value": "{\n\t\"definitions\": {},\n\t\"$schema\": \"http://json-schema.org/draft-07/schema#\", \n\t\"$id\": \"https://example.com/object1658355370.json\", \n\t\"title\": \"Root\", \n\t\"type\": \"array\",\n\t\"default\": [],\n\t\"items\":{\n\t\t\"$id\": \"#root/items\", \n\t\t\"title\": \"Items\", \n\t\t\"type\": \"object\",\n\t\t\"required\": [\n\t\t\t\"id\",\n\t\t\t\"firstName\",\n\t\t\t\"lastName\",\n\t\t\t\"email\"\n\t\t],\n\t\t\"properties\": {\n\t\t\t\"id\": {\n\t\t\t\t\"$id\": \"#root/items/id\", \n\t\t\t\t\"title\": \"Id\", \n\t\t\t\t\"type\": \"integer\",\n\t\t\t\t\"default\": 0\n\t\t\t},\n\t\t\t\"firstName\": {\n\t\t\t\t\"$id\": \"#root/items/firstName\", \n\t\t\t\t\"title\": \"Firstname\", \n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"default\": \"\",\n\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t},\n\t\t\t\"lastName\": {\n\t\t\t\t\"$id\": \"#root/items/lastName\", \n\t\t\t\t\"title\": \"Lastname\", \n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"default\": \"\",\n\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t},\n\t\t\t\"email\": {\n\t\t\t\t\"$id\": \"#root/items/email\", \n\t\t\t\t\"title\": \"Email\", \n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"default\": \"\",\n\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t}\n\t\t}\n\t}\n\n}",
+			"type": "string"
+		},
+		{
+			"key": "employeeSchema",
+			"value": "{\n\t\"definitions\": {},\n\t\"$schema\": \"http://json-schema.org/draft-07/schema#\", \n\t\"$id\": \"https://example.com/object1658355442.json\", \n\t\"title\": \"Root\", \n\t\"type\": \"object\",\n\t\"required\": [\n\t\t\"id\",\n\t\t\"firstName\",\n\t\t\"lastName\",\n\t\t\"email\"\n\t],\n\t\"properties\": {\n\t\t\"id\": {\n\t\t\t\"$id\": \"#root/id\", \n\t\t\t\"title\": \"Id\", \n\t\t\t\"type\": \"integer\",\n\t\t\t\"default\": 0\n\t\t},\n\t\t\"firstName\": {\n\t\t\t\"$id\": \"#root/firstName\", \n\t\t\t\"title\": \"Firstname\", \n\t\t\t\"type\": \"string\",\n\t\t\t\"default\": \"\",\n\t\t\t\"pattern\": \"^.*$\"\n\t\t},\n\t\t\"lastName\": {\n\t\t\t\"$id\": \"#root/lastName\", \n\t\t\t\"title\": \"Lastname\", \n\t\t\t\"type\": \"string\",\n\t\t\t\"default\": \"\",\n\t\t\t\"pattern\": \"^.*$\"\n\t\t},\n\t\t\"email\": {\n\t\t\t\"$id\": \"#root/email\", \n\t\t\t\"title\": \"Email\", \n\t\t\t\"type\": \"string\",\n\t\t\t\"default\": \"\",\n\t\t\t\"pattern\": \"^.*$\"\n\t\t}\n\t}\n}\n",
+			"type": "string"
+		},
+		{
+			"key": "employeeId",
+			"value": ""
+		},
+		{
+			"key": "docSchema",
+			"value": "{\n\t\"definitions\": {},\n\t\"$schema\": \"http://json-schema.org/draft-07/schema#\", \n\t\"$id\": \"https://example.com/object1658358205.json\", \n\t\"title\": \"Root\", \n\t\"type\": \"object\",\n\t\"required\": [\n\t\t\"swagger\",\n\t\t\"info\",\n\t\t\"host\",\n\t\t\"basePath\",\n\t\t\"tags\",\n\t\t\"paths\",\n\t\t\"definitions\"\n\t],\n\t\"properties\": {\n\t\t\"swagger\": {\n\t\t\t\"$id\": \"#root/swagger\", \n\t\t\t\"title\": \"Swagger\", \n\t\t\t\"type\": \"string\",\n\t\t\t\"default\": \"\",\n\t\t\t\"pattern\": \"^.*$\"\n\t\t},\n\t\t\"info\": {\n\t\t\t\"$id\": \"#root/info\", \n\t\t\t\"title\": \"Info\", \n\t\t\t\"type\": \"object\",\n\t\t\t\"required\": [\n\t\t\t\t\"description\",\n\t\t\t\t\"version\",\n\t\t\t\t\"title\",\n\t\t\t\t\"contact\",\n\t\t\t\t\"license\"\n\t\t\t],\n\t\t\t\"properties\": {\n\t\t\t\t\"description\": {\n\t\t\t\t\t\"$id\": \"#root/info/description\", \n\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t},\n\t\t\t\t\"version\": {\n\t\t\t\t\t\"$id\": \"#root/info/version\", \n\t\t\t\t\t\"title\": \"Version\", \n\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t},\n\t\t\t\t\"title\": {\n\t\t\t\t\t\"$id\": \"#root/info/title\", \n\t\t\t\t\t\"title\": \"Title\", \n\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t},\n\t\t\t\t\"contact\": {\n\t\t\t\t\t\"$id\": \"#root/info/contact\", \n\t\t\t\t\t\"title\": \"Contact\", \n\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\"name\",\n\t\t\t\t\t\t\"url\",\n\t\t\t\t\t\t\"email\"\n\t\t\t\t\t],\n\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\"name\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/info/contact/name\", \n\t\t\t\t\t\t\t\"title\": \"Name\", \n\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t},\n\t\t\t\t\t\t\"url\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/info/contact/url\", \n\t\t\t\t\t\t\t\"title\": \"Url\", \n\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t},\n\t\t\t\t\t\t\"email\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/info/contact/email\", \n\t\t\t\t\t\t\t\"title\": \"Email\", \n\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n,\n\t\t\t\t\"license\": {\n\t\t\t\t\t\"$id\": \"#root/info/license\", \n\t\t\t\t\t\"title\": \"License\", \n\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\"name\"\n\t\t\t\t\t],\n\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\"name\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/info/license/name\", \n\t\t\t\t\t\t\t\"title\": \"Name\", \n\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t}\n\t\t}\n,\n\t\t\"host\": {\n\t\t\t\"$id\": \"#root/host\", \n\t\t\t\"title\": \"Host\", \n\t\t\t\"type\": \"string\",\n\t\t\t\"default\": \"\",\n\t\t\t\"pattern\": \"^.*$\"\n\t\t},\n\t\t\"basePath\": {\n\t\t\t\"$id\": \"#root/basePath\", \n\t\t\t\"title\": \"Basepath\", \n\t\t\t\"type\": \"string\",\n\t\t\t\"default\": \"\",\n\t\t\t\"pattern\": \"^.*$\"\n\t\t},\n\t\t\"tags\": {\n\t\t\t\"$id\": \"#root/tags\", \n\t\t\t\"title\": \"Tags\", \n\t\t\t\"type\": \"array\",\n\t\t\t\"default\": [],\n\t\t\t\"items\":{\n\t\t\t\t\"$id\": \"#root/tags/items\", \n\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\"type\": \"object\",\n\t\t\t\t\"required\": [\n\t\t\t\t\t\"name\",\n\t\t\t\t\t\"description\"\n\t\t\t\t],\n\t\t\t\t\"properties\": {\n\t\t\t\t\t\"name\": {\n\t\t\t\t\t\t\"$id\": \"#root/tags/items/name\", \n\t\t\t\t\t\t\"title\": \"Name\", \n\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t},\n\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\"$id\": \"#root/tags/items/description\", \n\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\n\t\t},\n\t\t\"paths\": {\n\t\t\t\"$id\": \"#root/paths\", \n\t\t\t\"title\": \"Paths\", \n\t\t\t\"type\": \"object\",\n\t\t\t\"required\": [\n\t\t\t\t\"/api/v1/employee/add\",\n\t\t\t\t\"/api/v1/employee/all\",\n\t\t\t\t\"/api/v1/employee/{id}\"\n\t\t\t],\n\t\t\t\"properties\": {\n\t\t\t\t\"/api/v1/employee/add\": {\n\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add\", \n\t\t\t\t\t\"title\": \"/api/v1/employee/add\", \n\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\"post\"\n\t\t\t\t\t],\n\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\"post\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post\", \n\t\t\t\t\t\t\t\"title\": \"Post\", \n\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\"tags\",\n\t\t\t\t\t\t\t\t\"summary\",\n\t\t\t\t\t\t\t\t\"operationId\",\n\t\t\t\t\t\t\t\t\"consumes\",\n\t\t\t\t\t\t\t\t\"produces\",\n\t\t\t\t\t\t\t\t\"parameters\",\n\t\t\t\t\t\t\t\t\"responses\"\n\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\"tags\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/tags\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Tags\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/tags/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"summary\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/summary\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Summary\", \n\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"operationId\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/operationId\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Operationid\", \n\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"consumes\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/consumes\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Consumes\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/consumes/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"produces\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/produces\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Produces\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/produces/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"parameters\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/parameters\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Parameters\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/parameters/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\"in\",\n\t\t\t\t\t\t\t\t\t\t\t\"name\",\n\t\t\t\t\t\t\t\t\t\t\t\"description\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\",\n\t\t\t\t\t\t\t\t\t\t\t\"schema\"\n\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\"in\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/parameters/items/in\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"In\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"name\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/parameters/items/name\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Name\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/parameters/items/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"required\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/parameters/items/required\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Required\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"boolean\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": true\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"schema\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/parameters/items/schema\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Schema\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$ref\"\n\t\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$ref\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/parameters/items/schema/$ref\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"$ref\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"responses\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Responses\", \n\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\"200\",\n\t\t\t\t\t\t\t\t\t\t\"201\",\n\t\t\t\t\t\t\t\t\t\t\"401\",\n\t\t\t\t\t\t\t\t\t\t\"403\",\n\t\t\t\t\t\t\t\t\t\t\"404\"\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\"200\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses/200\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"200\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"schema\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses/200/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\t\"schema\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses/200/schema\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Schema\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$ref\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$ref\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses/200/schema/$ref\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"$ref\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"201\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses/201\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"201\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses/201/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"401\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses/401\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"401\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses/401/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"403\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses/403\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"403\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses/403/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"404\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses/404\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"404\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/add/post/responses/404/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\n\t\t\t\t\t}\n\t\t\t\t}\n,\n\t\t\t\t\"/api/v1/employee/all\": {\n\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all\", \n\t\t\t\t\t\"title\": \"/api/v1/employee/all\", \n\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\"get\"\n\t\t\t\t\t],\n\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\"get\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get\", \n\t\t\t\t\t\t\t\"title\": \"Get\", \n\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\"tags\",\n\t\t\t\t\t\t\t\t\"summary\",\n\t\t\t\t\t\t\t\t\"operationId\",\n\t\t\t\t\t\t\t\t\"produces\",\n\t\t\t\t\t\t\t\t\"responses\"\n\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\"tags\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/tags\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Tags\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/tags/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"summary\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/summary\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Summary\", \n\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"operationId\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/operationId\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Operationid\", \n\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"produces\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/produces\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Produces\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/produces/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"responses\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Responses\", \n\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\"200\",\n\t\t\t\t\t\t\t\t\t\t\"401\",\n\t\t\t\t\t\t\t\t\t\t\"403\",\n\t\t\t\t\t\t\t\t\t\t\"404\"\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\"200\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses/200\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"200\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"schema\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses/200/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\t\"schema\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses/200/schema\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Schema\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"items\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses/200/schema/type\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Type\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"items\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses/200/schema/items\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$ref\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$ref\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses/200/schema/items/$ref\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"$ref\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"401\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses/401\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"401\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses/401/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"403\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses/403\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"403\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses/403/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"404\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses/404\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"404\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/all/get/responses/404/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\n\t\t\t\t\t}\n\t\t\t\t}\n,\n\t\t\t\t\"/api/v1/employee/{id}\": {\n\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}\", \n\t\t\t\t\t\"title\": \"/api/v1/employee/{id}\", \n\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\"get\",\n\t\t\t\t\t\t\"put\",\n\t\t\t\t\t\t\"delete\"\n\t\t\t\t\t],\n\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\"get\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get\", \n\t\t\t\t\t\t\t\"title\": \"Get\", \n\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\"tags\",\n\t\t\t\t\t\t\t\t\"summary\",\n\t\t\t\t\t\t\t\t\"operationId\",\n\t\t\t\t\t\t\t\t\"produces\",\n\t\t\t\t\t\t\t\t\"parameters\",\n\t\t\t\t\t\t\t\t\"responses\"\n\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\"tags\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/tags\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Tags\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/tags/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"summary\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/summary\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Summary\", \n\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"operationId\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/operationId\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Operationid\", \n\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"produces\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/produces\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Produces\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/produces/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"parameters\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/parameters\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Parameters\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/parameters/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\"name\",\n\t\t\t\t\t\t\t\t\t\t\t\"in\",\n\t\t\t\t\t\t\t\t\t\t\t\"description\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\",\n\t\t\t\t\t\t\t\t\t\t\t\"type\",\n\t\t\t\t\t\t\t\t\t\t\t\"format\"\n\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\"name\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/parameters/items/name\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Name\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"in\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/parameters/items/in\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"In\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/parameters/items/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"required\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/parameters/items/required\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Required\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"boolean\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": true\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"type\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/parameters/items/type\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Type\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"format\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/parameters/items/format\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Format\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"responses\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/responses\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Responses\", \n\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\"200\",\n\t\t\t\t\t\t\t\t\t\t\"401\",\n\t\t\t\t\t\t\t\t\t\t\"403\",\n\t\t\t\t\t\t\t\t\t\t\"404\"\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\"200\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/responses/200\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"200\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"schema\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/responses/200/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\t\"schema\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/responses/200/schema\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Schema\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$ref\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$ref\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/responses/200/schema/$ref\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"$ref\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"401\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/responses/401\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"401\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/responses/401/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"403\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/responses/403\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"403\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/responses/403/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"404\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/responses/404\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"404\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/get/responses/404/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\"put\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put\", \n\t\t\t\t\t\t\t\"title\": \"Put\", \n\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\"tags\",\n\t\t\t\t\t\t\t\t\"summary\",\n\t\t\t\t\t\t\t\t\"operationId\",\n\t\t\t\t\t\t\t\t\"consumes\",\n\t\t\t\t\t\t\t\t\"produces\",\n\t\t\t\t\t\t\t\t\"parameters\",\n\t\t\t\t\t\t\t\t\"responses\"\n\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\"tags\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/tags\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Tags\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/tags/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"summary\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/summary\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Summary\", \n\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"operationId\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/operationId\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Operationid\", \n\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"consumes\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/consumes\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Consumes\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/consumes/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"produces\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/produces\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Produces\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/produces/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"parameters\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/parameters\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Parameters\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/parameters/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\"name\",\n\t\t\t\t\t\t\t\t\t\t\t\"in\",\n\t\t\t\t\t\t\t\t\t\t\t\"description\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\",\n\t\t\t\t\t\t\t\t\t\t\t\"type\",\n\t\t\t\t\t\t\t\t\t\t\t\"format\"\n\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\"name\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/parameters/items/name\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Name\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"in\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/parameters/items/in\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"In\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/parameters/items/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"required\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/parameters/items/required\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Required\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"boolean\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": true\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"type\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/parameters/items/type\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Type\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"format\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/parameters/items/format\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Format\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"responses\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Responses\", \n\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\"200\",\n\t\t\t\t\t\t\t\t\t\t\"201\",\n\t\t\t\t\t\t\t\t\t\t\"401\",\n\t\t\t\t\t\t\t\t\t\t\"403\",\n\t\t\t\t\t\t\t\t\t\t\"404\"\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\"200\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses/200\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"200\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"schema\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses/200/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\t\"schema\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses/200/schema\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Schema\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$ref\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$ref\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses/200/schema/$ref\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"$ref\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"201\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses/201\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"201\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses/201/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"401\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses/401\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"401\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses/401/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"403\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses/403\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"403\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses/403/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"404\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses/404\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"404\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/put/responses/404/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\"delete\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete\", \n\t\t\t\t\t\t\t\"title\": \"Delete\", \n\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\"tags\",\n\t\t\t\t\t\t\t\t\"summary\",\n\t\t\t\t\t\t\t\t\"operationId\",\n\t\t\t\t\t\t\t\t\"produces\",\n\t\t\t\t\t\t\t\t\"parameters\",\n\t\t\t\t\t\t\t\t\"responses\"\n\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\"tags\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/tags\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Tags\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/tags/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"summary\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/summary\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Summary\", \n\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"operationId\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/operationId\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Operationid\", \n\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"produces\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/produces\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Produces\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/produces/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"parameters\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/parameters\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Parameters\", \n\t\t\t\t\t\t\t\t\t\"type\": \"array\",\n\t\t\t\t\t\t\t\t\t\"default\": [],\n\t\t\t\t\t\t\t\t\t\"items\":{\n\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/parameters/items\", \n\t\t\t\t\t\t\t\t\t\t\"title\": \"Items\", \n\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\"name\",\n\t\t\t\t\t\t\t\t\t\t\t\"in\",\n\t\t\t\t\t\t\t\t\t\t\t\"description\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\",\n\t\t\t\t\t\t\t\t\t\t\t\"type\",\n\t\t\t\t\t\t\t\t\t\t\t\"format\"\n\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\"name\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/parameters/items/name\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Name\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"in\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/parameters/items/in\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"In\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/parameters/items/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"required\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/parameters/items/required\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Required\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"boolean\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": true\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"type\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/parameters/items/type\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Type\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\"format\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/parameters/items/format\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Format\", \n\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\"responses\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Responses\", \n\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\"200\",\n\t\t\t\t\t\t\t\t\t\t\"204\",\n\t\t\t\t\t\t\t\t\t\t\"401\",\n\t\t\t\t\t\t\t\t\t\t\"403\"\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\"200\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses/200\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"200\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\",\n\t\t\t\t\t\t\t\t\t\t\t\t\"schema\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses/200/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\t\"schema\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses/200/schema\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Schema\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"additionalProperties\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses/200/schema/type\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Type\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"additionalProperties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses/200/schema/additionalProperties\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Additionalproperties\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses/200/schema/additionalProperties/type\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Type\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"204\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses/204\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"204\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses/204/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"401\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses/401\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"401\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses/401/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\t\t\"403\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses/403\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"403\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/paths//api/v1/employee/{id}/delete/responses/403/description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t}\n\t\t}\n,\n\t\t\"definitions\": {\n\t\t\t\"$id\": \"#root/definitions\", \n\t\t\t\"title\": \"Definitions\", \n\t\t\t\"type\": \"object\",\n\t\t\t\"required\": [\n\t\t\t\t\"Employee\"\n\t\t\t],\n\t\t\t\"properties\": {\n\t\t\t\t\"Employee\": {\n\t\t\t\t\t\"$id\": \"#root/definitions/Employee\", \n\t\t\t\t\t\"title\": \"Employee\", \n\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\"type\",\n\t\t\t\t\t\t\"properties\",\n\t\t\t\t\t\t\"title\",\n\t\t\t\t\t\t\"description\"\n\t\t\t\t\t],\n\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\"type\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/type\", \n\t\t\t\t\t\t\t\"title\": \"Type\", \n\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t},\n\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties\", \n\t\t\t\t\t\t\t\"title\": \"Properties\", \n\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\"email\",\n\t\t\t\t\t\t\t\t\"firstName\",\n\t\t\t\t\t\t\t\t\"id\",\n\t\t\t\t\t\t\t\t\"lastName\"\n\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\"email\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/email\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Email\", \n\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\"type\",\n\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\"type\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/email/type\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Type\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/email/description\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\"firstName\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/firstName\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Firstname\", \n\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\"type\",\n\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\"type\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/firstName/type\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Type\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/firstName/description\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\"id\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/id\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Id\", \n\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\"type\",\n\t\t\t\t\t\t\t\t\t\t\"format\",\n\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\"type\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/id/type\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Type\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\"format\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/id/format\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Format\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/id/description\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\t\t\"lastName\": {\n\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/lastName\", \n\t\t\t\t\t\t\t\t\t\"title\": \"Lastname\", \n\t\t\t\t\t\t\t\t\t\"type\": \"object\",\n\t\t\t\t\t\t\t\t\t\"required\": [\n\t\t\t\t\t\t\t\t\t\t\"type\",\n\t\t\t\t\t\t\t\t\t\t\"description\"\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\t\t\t\"properties\": {\n\t\t\t\t\t\t\t\t\t\t\"type\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/lastName/type\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Type\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/properties/lastName/description\", \n\t\t\t\t\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n,\n\t\t\t\t\t\t\"title\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/title\", \n\t\t\t\t\t\t\t\"title\": \"Title\", \n\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t},\n\t\t\t\t\t\t\"description\": {\n\t\t\t\t\t\t\t\"$id\": \"#root/definitions/Employee/description\", \n\t\t\t\t\t\t\t\"title\": \"Description\", \n\t\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\t\"default\": \"\",\n\t\t\t\t\t\t\t\"pattern\": \"^.*$\"\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t}\n\t\t}\n\n\t}\n}\n",
+			"type": "string"
+		}
+	]
+}
