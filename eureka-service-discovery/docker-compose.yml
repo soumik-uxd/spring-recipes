@@ -1,0 +1,38 @@
+version: "3.7"
+
+services:
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    image: eurekaserver
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: curl -m 5 -fs -X GET http://localhost:8761/actuator/health | jq --exit-status -n 'inputs | if has("status") then .status=="UP" else false end' > /dev/null || exit 1
+      interval: 10s
+      timeout: 2s
+      retries: 10
+    networks:
+      - eureka-net
+  eureka-client:
+    build:
+      context: ./eureka-client
+      dockerfile: Dockerfile
+    image: eurekaclient
+    container_name: eureka-client
+    ports:
+      - "8081:8080"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+      - "EUREKA_SERVER_HOSTNAME=eureka-server"
+      - "EUREKA_SERVER_PORT=8761"
+    networks:
+      - eureka-net
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+networks:
+  eureka-net:
+    driver: bridge
