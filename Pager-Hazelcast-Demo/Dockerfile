@@ -7,6 +7,13 @@ LABEL source_url=""
 
 WORKDIR app
 
+# Install jlink
+RUN apt update && \
+    apt -y install binutils && \
+    jlink --module-path "$JAVA_HOME/jmods" \
+    --add-modules java.compiler,java.sql,java.naming,java.management,java.instrument,java.rmi,java.desktop,jdk.internal.vm.compiler.management,java.xml.crypto,java.scripting,java.security.jgss,jdk.httpserver,java.net.http,jdk.naming.dns,jdk.crypto.cryptoki,jdk.unsupported \
+    --verbose --strip-debug --compress 2 --no-header-files --no-man-pages --output /opt/jre-minimal
+
 # Copy maven artifacts
 COPY mvnw .
 COPY .mvn .mvn
@@ -17,12 +24,6 @@ RUN ./mvnw dependency:go-offline -B
 
 # Copy sources
 COPY src src
-
-RUN apt update && \
-    apt -y install binutils && \
-    jlink --module-path "$JAVA_HOME/jmods" \
-    --add-modules java.compiler,java.sql,java.naming,java.management,java.instrument,java.rmi,java.desktop,jdk.internal.vm.compiler.management,java.xml.crypto,java.scripting,java.security.jgss,jdk.httpserver,java.net.http,jdk.naming.dns,jdk.crypto.cryptoki,jdk.unsupported \
-    --verbose --strip-debug --compress 2 --no-header-files --no-man-pages --output /opt/jre-minimal
 
 # Build the package and copy to target path
 RUN ./mvnw clean package verify -DskipTests
